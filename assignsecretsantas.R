@@ -4,8 +4,9 @@
 ##family<-c(1,1,2,2,2,2,3,3,4,4,4)
 ## Read in data from Google Sheets 
 library("googledrive")
-sheetnm <-  drive_get("~/SecretSanta2007"))
-dat <- drive_get(as_id(sheetnm$id))
+#theid <- drive_find("SecretSanta2017")
+drive_download("SecretSanta2017",type="csv")
+dat <- read.csv("SecretSanta2017.csv")
 ## Remove non-participants
 dat <- dat[dat$Participant=="Yes",]
 ## Assign the vectors for family and people
