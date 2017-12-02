@@ -1,5 +1,6 @@
 ### This script randomly assigns people into pairs (one secret santa and one gift recipient) across families
 ### It also sends an email to each santa informing them about their gift recipient.
+## Using guidance from https://jennybc.github.io/purrr-tutorial/ex20_bulk-gmail.html
 
 ## Read in data from Google Sheets
 ## install.packages("googledrive")
@@ -52,12 +53,40 @@ edat <- dat %>% mutate(To = sprintf('%s <%s>',UniqName,Email),
                         body = sprintf(thebody,UniqName,santa)) %>% select(To,From,Subject,body)
 
 write_csv(edat, "composed-emails.csv")
-emails <- edat %>% pmap(mime)
+
+##edat <- read.csv("composed-emails.csv")
+emails1 <- edat[1:15,] %>% pmap(mime)
+emails2 <- edat[16:25,] %>% pmap(mime)
 ##str(emails, max.level = 2, list.len = 2)
 
-## This next line sends all of the emails.
-sent_mail <- emails %>% map(send_message)
+## This next to avoid problems with single message failures
+safe_send_message <- safely(send_message)
 
+## This next line sends all of the emails.
+sent_mail1 <- emails1 %>% map(safe_send_message)
+sent_mail2 <- emails2 %>% map(safe_send_message)
+
+
+saveRDS(sent_mail1,"sent-emails1.rds")
+saveRDS(sent_mail2,"sent-emails2.rds")
+
+errors2<- sent_mail2 %>%
+  transpose() %>%
+  .$error %>%
+  map_lgl(Negate(is.null))
+sent_mail2[errors2]
+
+
+errors1<- sent_mail1 %>%
+  transpose() %>%
+  .$error %>%
+  map_lgl(Negate(is.null))
+sent_mail1[errors1]
+
+
+
+
+### Old Algorithm
 # famdist<-outer(family,family,function(x,y){ x==y })
 # dimnames(famdist)<-list(people,people)
 # pdist<-outer(people,people,function(x,y){ paste(x," to ",y,sep="") })
