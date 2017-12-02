@@ -2,7 +2,7 @@
 ### It also sends an email to each santa informing them about their gift recipient.
 
 ## Read in data from Google Sheets
-install.packages("googledrive")
+## install.packages("googledrive")
 library("googledrive")
 library(dplyr)
 library(purrr)
@@ -22,8 +22,9 @@ thefamily <- dat$Family
 uniqname <- dat$UniqName
 
 santas <- vector(length=length(uniqname))
+names(santas)<-uniqname
 ## Start with the first person
-set.seed(12345)
+set.seed(12349)
 santas[1] <- sample( uniqname[ thefamily != thefamily[1] ],size=1 )
 for(s in 2:length(uniqname)){
   santas[s] <- sample( uniqname[ ( thefamily != thefamily[s] ) & !(uniqname %in% santas) ], size=1 )
@@ -45,14 +46,14 @@ Jake and Mari
 #testdat <- filter(dat,Family=="BowersWong")
 #testdat <- droplevels(testdat[-3,])
 
-edat<-dat %>% mutate(To=sprintf('%s <%s>',UniqName,Email),
-                        From='Jake Bowers <jake@jakebowers.org>',
-                        Subject='Secret Santa Assignment',
-                        body=sprintf(body,UniqName,santa)) %>% select(To,From,Subject,body)
+edat <- dat %>% mutate(To = sprintf('%s <%s>',UniqName,Email),
+                        From = 'Jake Bowers <jake@jakebowers.org>',
+                        Subject = 'Secret Santa Assignment',
+                        body = sprintf(thebody,UniqName,santa)) %>% select(To,From,Subject,body)
 
 write_csv(edat, "composed-emails.csv")
 emails <- edat %>% pmap(mime)
-str(emails, max.level = 2, list.len = 2)
+##str(emails, max.level = 2, list.len = 2)
 
 ## This next line sends all of the emails.
 sent_mail <- emails %>% map(send_message)
