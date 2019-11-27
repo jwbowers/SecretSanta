@@ -10,8 +10,8 @@ library(purrr)
 library(readr)
 library(gmailr)
 
-drive_download("SecretSanta2017",type="csv",overwrite=TRUE)
-origdat <- read.csv("SecretSanta2017.csv",as.is=TRUE)
+##drive_download("SecretSanta2019",type="csv",overwrite=TRUE)
+origdat <- read.csv("SecretSanta2019.csv",as.is=TRUE)
 ## Remove non-participants
 ## the base R way: dat <- dat[dat$Participant=="Yes",]
 ## The ddplyr way
@@ -25,7 +25,7 @@ uniqname <- dat$UniqName
 santas <- vector(length=length(uniqname))
 names(santas)<-uniqname
 ## Start with the first person
-set.seed(12349)
+set.seed(123492019)
 santas[1] <- sample( uniqname[ thefamily != thefamily[1] ],size=1 )
 for(s in 2:length(uniqname)){
   santas[s] <- sample( uniqname[ ( thefamily != thefamily[s] ) & !(uniqname %in% santas) ], size=1 )
@@ -33,26 +33,35 @@ for(s in 2:length(uniqname)){
 
 dat$santa <- santas
 
+write.csv(dat,file="dat.csv")
+
 thebody <- "Dear %s,
 
-You are the secret santa for %s. You can use the attached Google Sheet to learn more about your gift recipient (https://drive.google.com/open?id=1hM0HBpSu_KzOfF9kc75MvNvfgrVHnvngF1XJ_1Yg3T4).
-
-We will be exchanging our gifts on December 23 at Leah, Brock, Lucy, Tyler, and Elle's house.
+You are the secret santa for %s. You can use the attached Google Sheet to learn more about your gift recipient (https://docs.google.com/spreadsheets/d/10Db03keZZZQ1nfwurJaV9GY4weBU6jOv6_lhxXWnzfg/edit?usp=sharing).
 
 Love,
 
 Jake and Mari
 "
 
-#testdat <- filter(dat,Family=="BowersWong")
-#testdat <- droplevels(testdat[-3,])
+testdat <- filter(dat,Family=="BowersWong")
+testdat <- droplevels(testdat[-3,])
 
-edat <- dat %>% mutate(To = sprintf('%s <%s>',UniqName,Email),
-                        From = 'Jake Bowers <jake@jakebowers.org>',
-                        Subject = 'Secret Santa Assignment',
-                        body = sprintf(thebody,UniqName,santa)) %>% select(To,From,Subject,body)
+edat <- dat %>% mutate(to = sprintf('%s <%s>',UniqName,Email),
+                        from = 'Jake Bowers <jake@jakebowers.org>',
+                        subject = 'Secret Santa Assignment 2019',
+                        body = sprintf(thebody,UniqName,santa)) %>% select(to,from,subject,body)
 
 write_csv(edat, "composed-emails.csv")
+library(googleAuthR)
+options("googleAuthR.scopes.selected" = "email")
+
+gar_auth(email = "jake@jakebowers.org",
+         scopes="https://")
+
+gm_auth_configure(key="1031606473622-t6od72cv2a51vrm6gklp4c3e4ts7ve6a.apps.googleusercontent.com",
+                  secret="oUME-AM-CcPz-ICsi6ltpjtq")
+gm_auth(email="jake@jakebowers.org")
 
 ##edat <- read.csv("composed-emails.csv")
 emails1 <- edat[1:15,] %>% pmap(mime)
@@ -60,7 +69,7 @@ emails2 <- edat[16:25,] %>% pmap(mime)
 ##str(emails, max.level = 2, list.len = 2)
 
 ## This next to avoid problems with single message failures
-safe_send_message <- safely(send_message)
+safe_send_message <- safely(gm_send_message)
 
 ## This next line sends all of the emails.
 sent_mail1 <- emails1 %>% map(safe_send_message)
