@@ -56,12 +56,6 @@ write_csv(edat, "composed-emails.csv")
 library(googleAuthR)
 options("googleAuthR.scopes.selected" = "email")
 
-gar_auth(email = "jake@jakebowers.org",
-         scopes="https://")
-
-gm_auth_configure(key="1031606473622-t6od72cv2a51vrm6gklp4c3e4ts7ve6a.apps.googleusercontent.com",
-                  secret="oUME-AM-CcPz-ICsi6ltpjtq")
-gm_auth(email="jake@jakebowers.org")
 
 ##edat <- read.csv("composed-emails.csv")
 emails1 <- edat[1:15,] %>% pmap(mime)
